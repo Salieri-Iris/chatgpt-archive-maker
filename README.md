@@ -147,26 +147,6 @@ node bin/chatgpt-archive-maker.mjs fetch-all --archive "D:\path\to\archive-state
 - `markdown/`：可编辑 Markdown，包括会话版、时间线版、分支附录和隐藏上下文附录。
 - `_build/reports/`：质量审计报告和可选的参考对比报告。
 
-## 隐私检查
-
-公开仓库前，请确认 Git 只包含生成器代码。仓库中的 `.gitignore` 已经排除了常见的导出包、生成目录、图片、索引、报告和本地任务记录，但仍建议执行：
-
-```powershell
-git status --short
-git ls-files -o --exclude-standard
-git status --ignored --short
-git diff --cached --stat
-```
-
-不要提交这些内容：
-
-- OpenAI 导出压缩包或解压目录。
-- 生成后的归档目录。
-- 状态库目录，也就是你传给 `--archive` 的目录。
-- `.env`、令牌文件、含有 `CHATGPT_ACCESS_TOKEN` 的脚本或终端记录。
-- `assets/images/`、`data/`、`markdown/` 或 `_build/` 等生成结果。
-- 包含个人对话、图片、搜索索引、审计报告或本地路径的文件。
-
 ## 验证
 
 检查源码语法：
