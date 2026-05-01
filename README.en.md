@@ -147,26 +147,6 @@ Useful options include `--token-file`, `--base-url`, `--account-id`, and `--skip
 - `markdown/`: editable Markdown files for sessions, timelines, branches, and hidden context appendices.
 - `_build/reports/`: quality audit report and optional reference comparison report.
 
-## Privacy Checklist
-
-Before publishing or pushing the repository, make sure Git contains only the generator code. The included `.gitignore` excludes common export packages, generated archives, images, indexes, reports, and local task notes, but it is still worth checking:
-
-```powershell
-git status --short
-git ls-files -o --exclude-standard
-git status --ignored --short
-git diff --cached --stat
-```
-
-Do not commit:
-
-- OpenAI export zip files or extracted export directories.
-- Generated archive directories.
-- State-store directories, meaning the directory passed to `--archive`.
-- `.env` files, token files, scripts containing `CHATGPT_ACCESS_TOKEN`, or terminal logs containing tokens.
-- Generated `assets/images/`, `data/`, `markdown/`, or `_build/` directories.
-- Any file containing private conversations, images, search indexes, audit reports, or local machine paths.
-
 ## Verification
 
 Check source syntax:
