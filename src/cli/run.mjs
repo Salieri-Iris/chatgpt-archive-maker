@@ -3,6 +3,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseArgs, usageText } from './parse-args.mjs';
+import { isStateCommand, runStateCommand } from './state-commands.mjs';
 import { discoverExportInput, formatDiscoverySummary } from '../input/discover.mjs';
 import { loadConversationsFromDiscovery } from '../model/load-conversations.mjs';
 import { normalizeConversations, formatModelSummary } from '../model/normalize.mjs';
@@ -25,6 +26,10 @@ export async function runCli(argv) {
   if (options.version) {
     console.log(await packageVersion());
     return { exitCode: 0 };
+  }
+
+  if (isStateCommand(options.command)) {
+    return runStateCommand(options);
   }
 
   if (!options.input) {

@@ -18,6 +18,11 @@ Thumbs.db
 /OpenAI-export.zip
 /ChatGPT-archive/
 /ChatGPT-archive-generated/
+/archive-state/
+/ChatGPT-archive-state/
+/chatgpt-archive-state/
+/.chatgpt-access-token
+/chatgpt-access-token.txt
 /_build/
 /_tmp*/
 

@@ -408,6 +408,7 @@ function idsFromPointer(value) {
   const ids = [];
   for (const match of text.matchAll(/file-service:\/\/(file-[A-Za-z0-9]+)/g)) ids.push(match[1]);
   for (const match of text.matchAll(/file-service:\/\/(file_[0-9a-f]+)/g)) ids.push(match[1]);
+  for (const match of text.matchAll(/sediment:\/\/(file-[A-Za-z0-9]+)/g)) ids.push(match[1]);
   for (const match of text.matchAll(/sediment:\/\/(file_[0-9a-f]+)/g)) ids.push(match[1]);
   return ids;
 }

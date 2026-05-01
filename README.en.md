@@ -19,6 +19,8 @@ This repository should contain only the generator code. It does not need, and sh
 - Produces editable Markdown files for sessions, timelines, branches, and hidden context appendices.
 - Writes a local search index, resource map, quality audit report, and optional reference-archive comparison report.
 - Generates an offline archive that does not depend on external network resources.
+- Provides a persistent archive-state mode: import a full export once, add a single session later, list sessions, soft-delete sessions, undo the latest supported operation, and rebuild the final archive from state.
+- Provides an optional first-pass ChatGPT Web fetcher: with a user-supplied access token, fetch one session or page through the conversation list and import the results into the state store.
 
 ## Requirements
 
@@ -62,6 +64,76 @@ If you already have a previous archive, you can compare the new output against i
 node bin/chatgpt-archive-maker.mjs --input "D:\path\to\OpenAI-export.zip" --output "D:\path\to\ChatGPT-archive-generated" --force --compare-reference "D:\path\to\previous-archive"
 ```
 
+## Persistent Archive Mode
+
+Use the state-store commands if you want to maintain a long-lived local archive instead of regenerating everything from scratch. The state directory contains conversation JSON and copied resources, so keep it local and do not commit it to Git.
+
+Initialize a state store:
+
+```powershell
+node bin/chatgpt-archive-maker.mjs init --archive "D:\path\to\archive-state"
+```
+
+Import a full OpenAI export:
+
+```powershell
+node bin/chatgpt-archive-maker.mjs import-export --archive "D:\path\to\archive-state" --input "D:\path\to\OpenAI-export.zip"
+```
+
+Import one specific session. The input can be a full export package, an extracted export directory, `conversations.json`, or a single conversation JSON file:
+
+```powershell
+node bin/chatgpt-archive-maker.mjs import-session --archive "D:\path\to\archive-state" --input "D:\path\to\OpenAI-export" --session-id "conversation-id"
+```
+
+Build the final archive from state:
+
+```powershell
+node bin/chatgpt-archive-maker.mjs build --archive "D:\path\to\archive-state" --output "D:\path\to\ChatGPT-archive-generated" --timezone Asia/Shanghai --force
+```
+
+List, remove, and undo:
+
+```powershell
+node bin/chatgpt-archive-maker.mjs list-sessions --archive "D:\path\to\archive-state"
+node bin/chatgpt-archive-maker.mjs remove-session --archive "D:\path\to\archive-state" --session-id "conversation-id"
+node bin/chatgpt-archive-maker.mjs undo --archive "D:\path\to\archive-state"
+```
+
+Removal is soft deletion: the stored version remains in the state directory, but the next `build` excludes it. `undo` currently supports the latest `remove-session` operation, and also supports new-format `import-session` or `fetch-current` operations.
+
+## Optional Live Fetching
+
+`fetch-current` and `fetch-all` are experimental optional commands that pull data from ChatGPT Web endpoints and import it into the state store. They rely on non-public ChatGPT Web behavior and may break if the web app changes. The most stable and recommended source of truth is still the official OpenAI export package.
+
+These commands need an access token. Prefer an environment variable or a local token file. Do not commit tokens to Git, and avoid putting them in reusable scripts or shell history. In PowerShell, you can set a temporary environment variable from an interactive prompt instead of typing the token directly into the command line:
+
+```powershell
+$secureToken = Read-Host "ChatGPT access token" -AsSecureString
+$env:CHATGPT_ACCESS_TOKEN = [System.Net.NetworkCredential]::new("", $secureToken).Password
+Remove-Variable secureToken
+```
+
+Fetch one session:
+
+```powershell
+node bin/chatgpt-archive-maker.mjs fetch-current --archive "D:\path\to\archive-state" --session-id "conversation-id"
+```
+
+You can also pass a ChatGPT conversation URL to `--input`:
+
+```powershell
+node bin/chatgpt-archive-maker.mjs fetch-current --archive "D:\path\to\archive-state" --input "https://chatgpt.com/c/conversation-id"
+```
+
+Fetch a paged conversation list and import each session:
+
+```powershell
+node bin/chatgpt-archive-maker.mjs fetch-all --archive "D:\path\to\archive-state" --limit 200 --delay-ms 200
+```
+
+Useful options include `--token-file`, `--base-url`, `--account-id`, and `--skip-resources`. If an image resource cannot be downloaded, the conversation text is still kept and the build audit reports the missing resource.
+
 ## Output
 
 - `index.html`: overview and global search.
@@ -80,6 +152,8 @@ node bin/chatgpt-archive-maker.mjs --input "D:\path\to\OpenAI-export.zip" --outp
 Before publishing or pushing the repository, make sure Git contains only the generator code. The included `.gitignore` excludes common export packages, generated archives, images, indexes, reports, and local task notes, but it is still worth checking:
 
 ```powershell
+git status --short
+git ls-files -o --exclude-standard
 git status --ignored --short
 git diff --cached --stat
 ```
@@ -88,6 +162,8 @@ Do not commit:
 
 - OpenAI export zip files or extracted export directories.
 - Generated archive directories.
+- State-store directories, meaning the directory passed to `--archive`.
+- `.env` files, token files, scripts containing `CHATGPT_ACCESS_TOKEN`, or terminal logs containing tokens.
 - Generated `assets/images/`, `data/`, `markdown/`, or `_build/` directories.
 - Any file containing private conversations, images, search indexes, audit reports, or local machine paths.
 
@@ -113,3 +189,4 @@ After generating an archive, the tool writes a quality audit report. In a health
 - If the original export does not include the physical file for a non-image attachment, the tool keeps a placeholder note instead of inventing a file path.
 - The main reading views restore images only for the current conversation path; branch messages are kept in branch appendices.
 - The automatic audit checks structure, indexes, resource links, and offline availability, but it does not screenshot every message.
+- The ChatGPT Web fetcher uses non-public web endpoints. Treat it as a convenience for incremental archiving, not as a replacement for official exports.
